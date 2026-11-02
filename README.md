@@ -1,5 +1,15 @@
 # Ultra Check Windows 2.9
 
+## Download and run on Windows
+
+1. Sign in to the GitHub account that can access this private repository.
+2. Click **Code → Download ZIP** on the repository home page.
+3. Extract the ZIP completely, open the extracted `ultra-check-main` folder and run **Ultra-Check.exe**.
+
+The EXE is included at the repository root. Python and Node.js are not required for normal use. For a single-file download, open [Ultra-Check.exe](./Ultra-Check.exe) and click **Download raw file**.
+
+The included executable is the verified Windows 2.9 build. Its SHA-256 is recorded in [SHA256SUMS.txt](./SHA256SUMS.txt). On first upgrade, follow the data-migration instructions below to retain your old lists and settings.
+
 ## Upgrade and keep your lists
 
 1. Exit the previous application using **Exit Ultra Check**.
@@ -33,7 +43,7 @@ Both lookup directions, date/country filters, Search/Text scope, 10 results per 
 
 ## Validation
 
-84 Python tests passed, including stable storage across different EXE locations, backup recovery, migration of an old five-slot vault, failover through the tenth key, and search without cost preflight. The packaged EXE was checked for bookmark retention after shutdown/restart, combined saved-list CSV content, 10 API fields, English screens, mobile layout, and 23 fixture results paginated 10/10/3. Test-only data directories were used; no paid Apify runs were created. The CSV contents were checked rather than an interactive Save dialog. See UI-checks.json and Test-summary.json.
+84 Python tests passed, including stable storage across different EXE locations, backup recovery, migration of an old five-slot vault, failover through the tenth key, and search without cost preflight. The packaged EXE was checked for bookmark retention after shutdown/restart, combined saved-list CSV content, 10 API fields, English screens, mobile layout, and 23 fixture results paginated 10/10/3. Test-only data directories were used; no paid Apify runs were created. The CSV contents were checked rather than an interactive Save dialog. See `validation/ui-checks-2.9.json` and `validation/release-2.9.json`.
 
 ## Build from source
 
