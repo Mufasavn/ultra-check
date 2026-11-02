@@ -1,0 +1,15 @@
+Ultra Check Windows 2.9.0
+
+This executable bundles Python 3.12 and uses these open-source components:
+React, React DOM (MIT); lucide-react (ISC); PyWinRT 3.2.1 (MIT);
+PyInstaller 6.22.3 (GPL with bootloader distribution exception);
+tzdata 2026.5 (Apache 2.0; IANA data public domain).
+
+Google transparency protocol fields were checked against the public Google frontend.
+The overlay decoding approach was informed by the MIT-licensed
+block-town/google-ads-transparency-mcp project. Its license is included.
+Optional Apify API integration uses a user-supplied credentials encrypted by Windows DPAPI at rest. No credentials are included in this distribution. Third-party Actor charges and terms apply.
+
+https://github.com/pywinrt/pywinrt
+https://github.com/block-town/google-ads-transparency-mcp
+https://pyinstaller.org/

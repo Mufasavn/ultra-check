@@ -1,0 +1,14 @@
+{
+  "name": "ultra-check-windows-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build-ui.mjs"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "lucide-react": "1.31.0",
+    "esbuild": "0.28.0"
+  }
+}

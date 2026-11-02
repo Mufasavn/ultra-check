@@ -1,0 +1,11 @@
+{
+  "version": "2.9.0-windows-search-text",
+  "exeSha256": "892a4a7e73c2cf67e44abe6a770502ea2da9bb983a44af2ef68c861283c1e94e",
+  "unitTestsPassed": 84,
+  "uiChecks": "UI-checks.json",
+  "persistentDefault": "%LOCALAPPDATA%/UltraCheck",
+  "slots": 10,
+  "preflight": false,
+  "language": "en",
+  "containsUserCredentials": false
+}

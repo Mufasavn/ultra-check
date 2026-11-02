@@ -1,0 +1,1 @@
+import {build} from "esbuild"; await build({entryPoints:["ui.tsx"],bundle:true,minify:true,outfile:"assets/app.js",platform:"browser",jsx:"automatic",define:{"process.env.NODE_ENV":JSON.stringify("production")}});

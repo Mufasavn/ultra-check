@@ -1,0 +1,28 @@
+# Dependencies and generated builds
+node_modules/
+build/
+dist/
+__pycache__/
+*.py[cod]
+*.spec.bak
+*.tsbuildinfo
+# Runtime data and secrets: never upload
+UltraCheck-data/
+UltraCheck/
+.env
+.env.*
+*.dat
+*.sqlite
+*.sqlite-*
+*.db
+*.log
+saved.json
+saved.json.bak
+proxy-usage.json
+portable-migrations.json
+session.json
+*.tmp
+# Personal exports and local tests
+exports/
+tmp/
+test-results/
