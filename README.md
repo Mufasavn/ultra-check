@@ -1,50 +1,44 @@
-# Ultra Check Windows 2.9
+# Ultra Check 2.10 — Windows
 
-## Download and run on Windows
+## Download and run
 
-1. Sign in to the GitHub account that can access this private repository.
-2. Click **Code → Download ZIP** on the repository home page.
-3. Extract the ZIP completely, open the extracted `ultra-check-main` folder and run **Ultra-Check.exe**.
+This repository is private. Sign in to an authorized GitHub account, choose **Code → Download ZIP**, extract the entire ZIP and run **Ultra-Check.exe**. Python and Node are not needed to run the EXE. The standalone Windows ZIP is also provided locally with the release.
 
-The EXE is included at the repository root. Python and Node.js are not required for normal use. For a single-file download, open [Ultra-Check.exe](./Ultra-Check.exe) and click **Download raw file**.
+## Upgrade from 2.9
 
-The included executable is the verified Windows 2.9 build. Its SHA-256 is recorded in [SHA256SUMS.txt](./SHA256SUMS.txt). On first upgrade, follow the data-migration instructions below to retain your old lists and settings.
+Exit the old application using **Exit Ultra Check**, then run the new EXE. Existing data remains in **%LOCALAPPDATA%\UltraCheck** under the same Windows account. Saved advertisers/domains, CSV export, ten encrypted Apify key slots, run history and Google settings are retained. Do not delete this data directory. Older portable data migration still works: place the new EXE next to the old **UltraCheck-data** folder on its first launch. Credentials encrypted for another Windows account/computer must be entered again.
 
-## Upgrade and keep your lists
+## Choose Google or Microsoft Bing
 
-1. Exit the previous application using **Exit Ultra Check**.
-2. Place the new Ultra-Check.exe next to the OLD UltraCheck-data folder for its first launch. Do not delete the old folder.
-3. Start the new EXE. Existing saved lists, API vault, proxy settings and the main run/cache database are migrated without deleting the old files.
-4. From this release onward, data is stored at **%LOCALAPPDATA%/UltraCheck**, under your current Windows account. Moving or replacing the EXE no longer changes where your saved lists are stored. Rebooting does not clear them. The exact location is shown on Saved lists.
+On Domain lookup, select **Advertising platform**. Existing Google Search/Text behavior is retained. Bing uses Microsoft's documented public Ad Library API directly, without Apify charges or Proxy-Cheap. Google provider settings and usage meters still apply to Google only. Saved names/domains are a shared local bookmark list; the selected platform determines which source is queried.
 
-Only data still available in the old folder can be recovered. If an older ZIP was extracted into a different folder, find its UltraCheck-data and place the new EXE next to it for the first launch. The program does not scan the entire computer. Existing stable lists are merged, not replaced; migration from each old folder is performed once so removed items do not reappear on every launch. Keep a backup before removing any old folder.
+### Bing: Advertiser → Domain
 
-Lists are written atomically and flushed to disk, with a last-known-good saved.json.bak backup. API credentials remain encrypted to your Windows account. Moving to a different computer or Windows account requires entering credentials again.
+Enter a legal advertiser name or numeric Microsoft advertiser ID, click **Find advertisers**, verify the profile, select it and click **Domain lookup**. Use **Load more profiles** / **Load more Bing ads** to continue. Each ad's details are read to obtain first/last dates. Destination URL hosts are preferred, with displayed URL hosts used when no destination is available.
 
-## Saved lists and CSV
+### Bing: Domain → Advertiser
 
-Open **Saved lists**. Both advertiser names and domains remain available after a restart. Click **Export saved CSV** to export both lists into one UTF-8 CSV with Type and Name or domain columns. Values that could be interpreted as spreadsheet formulas are escaped. Saved advertiser names, domain names and ad content are not translated or changed.
+Enter a domain and click **Find advertisers**. Ultra Check searches Microsoft's ad-content index and verifies that the destination or displayed hostname matches the domain or its subdomains. Lookalike domains and mentions in titles/descriptions alone are excluded. Use **Continue loading advertisers** for more source pages. Results and CSV identify the platform. Ten displayed results per page remain available.
 
-## Ten Apify API slots
+### Bing scope and accuracy
 
-Open **Apify API**. There are now 10 encrypted API slots. Existing five-slot vaults are upgraded automatically without dropping keys. When an account is conclusively out of quota/balance before a new run is accepted, the application tries the next available slot in order. Keys from the same Apify account share one quota and do not multiply the account allowance. After a run ID is accepted, network errors do not create another run on a different key. Usage percentages remain account-level snapshots.
+- Microsoft publishes eligible Bing impressions in the **EU/EEA**, regardless of advertiser location. “All EU/EEA countries” is not worldwide coverage.
+- The public API does **not expose a Search placement/ad-type field**. This release retains records with title, description, a valid URL and no media asset JSON, labeled **text candidates / placement unverified**. It does not claim an exact Search/Text-only classification.
+- The documented search is by advertiser or ad content, not an exhaustive destination-domain index. Domain results are verified candidates, **not a complete list or total advertiser count**.
+- First/last eligible impression dates are in **UTC**, can lag 1–3 days and do not prove current campaign status. The separate live/today check is disabled for Bing. A source last-date of today can be marked observed today, without asserting live status.
+- Public access has rate limits. Requests are spaced by at least five seconds and one source page is loaded per click. HTTP 403/429 pauses new requests for at least 60 seconds, respecting a longer Retry-After value. No IP switching, CAPTCHA bypass, automatic retry loop or paid fallback is used. Cached records remain accessible, including after restart; continuation tokens last seven days.
+- Each list response is cached for one hour; ad details for 24 hours. **Refresh data** bypasses the cache. Original fetch times are retained; the displayed Bing fetch time refers to the oldest record in the latest page, not the full session.
 
-## No cost preflight
-
-The cost-check option, overview preflight and confirmation dialog have been removed from normal searches. An uncached search starts using the USD limit configured in **Data source**. This is a per-Actor-run limit, not a free scan or a total session budget. A domain search may have separate historical and today runs. The application does not increase the budget automatically. Results remain explicitly incomplete if a source or cost limit is reached. A cached partial result is reused; select **Refresh data (skip cache)** when you deliberately want a new run, which may charge for old ads again.
-
-## English interface
-
-Navigation, settings, status messages, source errors, CSV headings and help are in English. No translation service is used at runtime. Advertiser names and original source content remain unchanged for accuracy.
-
-## Existing features
-
-Both lookup directions, date/country filters, Search/Text scope, 10 results per page, CSV result export, today checks, optional Proxy-Cheap, usage estimates, local caching and persistent Apify run history remain available. Proxy usage is a local HTTP-payload estimate plus your manual baseline, not synchronized provider billing. Google restrictions/CAPTCHA stop the session; no IP switching or automatic paid fallback is performed.
+Microsoft documentation: https://learn.microsoft.com/en-us/advertising/guides/ad-library-api?view=bingads-13
 
 ## Validation
 
-84 Python tests passed, including stable storage across different EXE locations, backup recovery, migration of an old five-slot vault, failover through the tenth key, and search without cost preflight. The packaged EXE was checked for bookmark retention after shutdown/restart, combined saved-list CSV content, 10 API fields, English screens, mobile layout, and 23 fixture results paginated 10/10/3. Test-only data directories were used; no paid Apify runs were created. The CSV contents were checked rather than an interactive Save dialog. See `validation/ui-checks-2.9.json` and `validation/release-2.9.json`.
+105 Python tests passed, including the existing Google/storage/Apify/proxy tests and 21 Bing tests. TypeScript checking and the UI build passed. The final Windows EXE passed application restart persistence, ten key fields, saved/result CSV, Google regression UI, both Bing lookup directions, manual Bing continuation, UTC dates, EU/EEA filters, 10/10/3 result pagination, platform reset and mobile layout checks. UI search tests use explicit fixtures, not production result counts.
+
+The final EXE also fetched a real Microsoft ad detail for waterdropfilter.com. A real domain search returned two matching ad records from two advertiser IDs; these are content-search results, not the domain's total advertisers. The final repeated domain check reused those cached records. No paid Apify runs were started. See **validation/release-2.10.json**, **validation/ui-checks-2.10.json** and **validation/bing-live-2.10.json**.
 
 ## Build from source
 
-Windows x64, Python 3.12: `python -m pip install -r requirements.txt`, then `python ultra_server.py`. Run tests with `python -m unittest discover -p "test_*.py"`. If editing the React UI, run `npm install` and `npm run build`. Package with `python -m PyInstaller --noconfirm Ultra-Check.spec`. Backend and storage are Python; the UI is React/TypeScript.
+Windows x64 and Python 3.12: `python -m pip install -r requirements.txt`, then `python ultra_server.py`. Run tests: `python -m unittest discover -p "test_*.py"`. Backend/storage are Python; the UI is React/TypeScript. For UI edits: `npm install`, then `npm run build`. Package the Windows EXE: `python -m PyInstaller --noconfirm Ultra-Check.spec`.
+
+No user API keys, proxy passwords, saved lists or runtime databases are included. Repository visibility must remain private; no public deployment is required.

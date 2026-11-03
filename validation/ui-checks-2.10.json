@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "version": "2.10.0-windows-google-bing",
+  "exeSha256": "b1a0f3d70e9c601a90ab1530eda03ae1d9860f61d8304294ba5fb761f15768d9",
+  "checks": [
+    "Saved lists persist after full application restart",
+    "Backup created",
+    "Saved CSV includes both lists",
+    "Ten API fields",
+    "Search without preflight modal",
+    "23 results paginate 10/10/3",
+    "English interface and HTML language",
+    "Mobile without overflow",
+    "Bing domain lookup loads one page per click, 23 results paginate 10/10/3",
+    "Bing advertiser profile lookup and selected numeric ID",
+    "Bing request routing, EU/EEA countries and UTC dates",
+    "Bing CSV includes platform, Germany, scope limitations",
+    "Bing does not trigger today or paid Apify calls",
+    "Platform switch clears result state",
+    "Bing mobile without overflow",
+    "No browser runtime errors"
+  ],
+  "note": "Separate test data directory; mocked search; CSV contents checked; no external API calls or paid runs."
+}

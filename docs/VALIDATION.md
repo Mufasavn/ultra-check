@@ -13,3 +13,8 @@ python -m unittest discover -p "test_*.py"
 ```
 
 No real credentials or personal datasets are required for unit tests. Original benchmark datasets and personal runtime folders are excluded.
+
+
+## Release 2.10
+
+105 Python tests, TypeScript checking and bundled UI build passed. Packaged UI checks cover both platforms, both Bing directions, manual continuation, 10/10/3 fixture pagination, source isolation, UTC dates, country labels/filters, CSV scope, restart persistence, 10 key slots and mobile overflow. One final live Microsoft detail request and cached replay of two real domain-query records passed; no paid Apify runs were started. These checks do not certify exhaustive Bing coverage or Search/Text placement. See validation/*2.10.json.

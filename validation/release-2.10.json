@@ -1,0 +1,11 @@
+{
+  "version": "2.10.0-windows-google-bing",
+  "exeSha256": "b1a0f3d70e9c601a90ab1530eda03ae1d9860f61d8304294ba5fb761f15768d9",
+  "unitTestsPassed": 105,
+  "bingTests": 21,
+  "typescriptCheck": true,
+  "paidApifyRuns": 0,
+  "bingPlacementVerified": false,
+  "bingDomainIndexExhaustive": false,
+  "persistentDirectory": "%LOCALAPPDATA%/UltraCheck"
+}

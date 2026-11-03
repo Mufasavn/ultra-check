@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "version": "2.10.0-windows-google-bing",
+  "exeSha256": "b1a0f3d70e9c601a90ab1530eda03ae1d9860f61d8304294ba5fb761f15768d9",
+  "liveDetail": {
+    "adId": "77515820095524",
+    "advertiserId": "4295402380",
+    "domain": "waterdropfilter.com",
+    "first": "2026-10-11T00:00:00+00:00",
+    "last": "2026-10-14T00:00:00+00:00",
+    "cached": false
+  },
+  "reverse": {
+    "domain": "waterdropfilter.com",
+    "ads": 2,
+    "advertisers": 2,
+    "cached": true,
+    "coverageLimited": true
+  },
+  "paidApifyRuns": 0,
+  "note": "Final packaged EXE: one live Microsoft detail request; reverse query reuses the two previously downloaded real Microsoft records. This is not an exhaustive domain count or verified Search/Text placement."
+}

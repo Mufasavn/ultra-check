@@ -26,3 +26,8 @@ The server validates Host, Origin where present and a per-session token on modif
 ## Cost behavior
 
 Normal searches do not run cost preflight or open a budget-confirmation dialog in 2.9. The configured per-Actor USD cap still applies. Historical and today lookups may create separate paid runs. Existing complete or partial caches can be reused; Refresh data explicitly requests new data. The program does not switch accounts after a run has already been accepted.
+
+
+## 2.10: Bing adapter
+
+`bing_client.py` implements the documented public Microsoft Ad Library API. Search POST bodies select `platform: "bing"`; missing platform remains Google for backward compatibility. Bing routes before all Apify/proxy processing and shares the existing SQLite cache, cancellation event and operation lock with separate cache keys. `/api/bing` supplies the supported EU/EEA countries and scope metadata. Domain lookup validates source URL hosts, with no requests to advertiser destinations. Text shape is a conservative candidate heuristic; placement/type is unverified. Continuation state and rate-limit cooldown persist in the main cache.

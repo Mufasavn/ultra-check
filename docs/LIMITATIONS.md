@@ -10,3 +10,8 @@
 - Run history preserves IDs, not remote dataset retention. Import needs an account with access to a still-available compatible Apify run.
 - Windows DPAPI vaults are tied to the Windows user/machine. They are not credentials portable to another computer.
 - No server-side user login, public hosting, GitHub Pages or deployment is configured in this repository.
+
+
+## Bing 2.10
+
+Microsoft Ad Library covers eligible EU/EEA impressions only. Public API search indexes advertiser names/ad content; destination-domain discovery is not guaranteed exhaustive. No placement or ad-type field is exposed, so text-shaped records are labeled candidates and are not certified Search/Text-only. Media assets are excluded conservatively. Dates are UTC and may lag 1–3 days; no live campaign status is claimed. Detail requests can take longer and hit stricter unauthenticated limits; all downloaded results are retained and continuation is manual. Displayed hostname matching is distinguished from destination hostname matching.

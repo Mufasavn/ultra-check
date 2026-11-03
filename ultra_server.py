@@ -6,12 +6,13 @@ from urllib.parse import urlsplit
 from saved_store import SavedStore
 from run_history import RunHistory
 from data_store import data_directory
+from bing_client import BingClient
 from apify_client import ApifyClient,BudgetRequired
 from apify_keys import ApifyKeys
 from proxy_client import ProxySettings,ProxyGoogleClient
 from ultra_client import GoogleClient,UltraError,BlockedError,CancelledError,today,now_iso
 
-VERSION='2.9.0-windows-search-text'
+VERSION='2.10.0-windows-google-bing'
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))
 ASSETS=ROOT/'assets'
 def main():
@@ -22,6 +23,7 @@ def main():
     saved=SavedStore(data/"saved.json")
     client=GoogleClient(data,regions);apify=ApifyClient(client);keys=ApifyKeys(apify,data/'apify-keys.dat');apify.keys=keys;provider={'name':'apify' if keys.enabled else 'direct'};token=secrets.token_urlsafe(32);operation=threading.Lock()
     history=RunHistory(client);apify.history=history
+    bing=BingClient(client);active_platform={'name':'google'}
     proxy_settings=ProxySettings(data);proxy_client=ProxyGoogleClient(data/'proxy-cache',regions,proxy_settings,client)
     if proxy_settings.config['enabled'] and not proxy_settings.error:provider['name']='proxy'
     class Handler(BaseHTTPRequestHandler):
@@ -36,13 +38,14 @@ def main():
             path=urlsplit(self.path).path
             if path=='/api/search':return self.send_json({'configured':True,'today':today(),'version':VERSION,'provider':provider['name'],'dataDirectory':str(data),'filters':{'platform':'SEARCH','format':'TEXT'}})
             if path=='/api/apify-runs':return self.send_json(history.list())
+            if path=='/api/bing':return self.send_json(bing.metadata())
             if path=='/api/apify-keys':return self.send_json(keys.summary())
             if path=='/api/proxy':return self.send_json(proxy_settings.summary())
             if path=='/api/provider':return self.send_json({'provider':provider['name'],'apifyConfigured':bool(apify.key),'maxAds':apify.max_ads,'maxChargeUsd':apify.max_charge})
             if path=='/api/saved':
                 try:return self.send_json(saved.read())
                 except (OSError,ValueError):return self.send_json({'error':'Could not read saved lists.'},500)
-            if path=='/api/progress':return self.send_json({'busy':operation.locked(),'progress':proxy_client.progress if provider['name']=='proxy' else client.progress})
+            if path=='/api/progress':return self.send_json({'busy':operation.locked(),'progress':bing.progress if active_platform['name']=='bing' else proxy_client.progress if provider['name']=='proxy' else client.progress})
             if path in ('/','/index.html'):
                 raw=(ASSETS/'index.html').read_text(encoding='utf-8').replace('__ULTRA_TOKEN__',token).encode('utf-8');kind='text/html; charset=utf-8'
             elif path in ('/app.js','/styles.css','/favicon.svg'):
@@ -71,6 +74,10 @@ def main():
             if not operation.acquire(blocking=False):return self.send_json({'error':'Another scan is in progress. Wait for it to finish.'},409)
             client.cancel.clear()
             try:
+                platform=body.get('platform','google')
+                if platform not in ('google','bing'):raise UltraError('Invalid advertising platform.')
+                active_platform['name']=platform
+                if path=='/api/search' and platform=='bing':return self.send_json(bing.process(body))
                 if path=='/api/proxy':
                     if body.get('action')=='reset':result=proxy_settings.reset(body.get('baselineMb',0))
                     else:result=proxy_settings.save(body)
@@ -121,7 +128,7 @@ def main():
             except Exception:
                 with (data/'errors.log').open('a',encoding='utf-8') as log:log.write(now_iso()+'\n'+traceback.format_exc()+'\n')
                 self.send_json({'error':"Data processing error. Details were saved in the local data folder's errors.log."},500)
-            finally:client.progress='Ready';proxy_client.progress='Ready';operation.release()
+            finally:client.progress='Ready';proxy_client.progress='Ready';bing.progress='Ready';operation.release()
     server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler);server.daemon_threads=True
     url=f'http://127.0.0.1:{server.server_port}'
     (data/'session.json').write_text(json.dumps({'url':url,'version':VERSION,'pid':os.getpid()}),encoding='utf-8')
