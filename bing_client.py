@@ -40,15 +40,22 @@ def date_value(value):
         return value[:10]+'T00:00:00+00:00'
     return None
 
+def has_media(item):
+    raw=item.get('AssetJson')
+    if not raw:return False
+    if isinstance(raw,str):
+        try:return bool(json.loads(raw))
+        except ValueError:return bool(raw.strip())
+    return bool(raw)
+
 def text_candidate(item):
-    # Deliberately conservative; no media/OCR extraction for the Bing adapter.
-    return (not item.get('AssetJson') and bool(str(item.get('Title') or '').strip())
-            and bool(str(item.get('Description') or '').strip())
+    # A blank description is valid: Microsoft publishes title-only text ads.
+    return (not has_media(item) and bool(str(item.get('Title') or item.get('Description') or '').strip())
             and bool(domain(item.get('DestinationUrl')) or domain(item.get('DisplayUrl'))))
 
 class BingClient:
-    page_size = 10
-    interval = 5.0
+    page_size = 12
+    interval = 15.0
 
     def __init__(self, cache):
         self.cache = cache
@@ -77,7 +84,7 @@ class BingClient:
         self.progress = 'Bing · waiting between public API requests…'
         if self.cache.cancel.wait(delay): self.cache.check_cancel()
         self.last_call = time.monotonic()
-        request = urllib.request.Request(url,headers={'Accept':'application/json','User-Agent':'UltraCheck/2.10 (Microsoft public Ad Library client)'})
+        request = urllib.request.Request(url,headers={'Accept':'application/json','User-Agent':'UltraCheck/2.10.1 (Microsoft public Ad Library client)'})
         try:
             with self.opener.open(request,timeout=35) as response:
                 raw = response.read(4_000_001)
@@ -102,9 +109,9 @@ class BingClient:
         self.cache.put_cached(key,value)
         return value,now_iso(),False
 
-    def _token(self, fingerprint, offset):
+    def _token(self, fingerprint, offset, scan_id=None):
         token='bing:'+secrets.token_urlsafe(18)
-        self.cache.put_cached(token,{'query':fingerprint,'skip':offset})
+        self.cache.put_cached(token,{'query':fingerprint,'skip':offset,'scanId':scan_id})
         return token
 
     def _offset(self, token, fingerprint):
@@ -118,7 +125,7 @@ class BingClient:
 
     def process(self, body):
         mode=body.get('mode');region=str(body.get('region') or '')
-        if mode not in ('discover','check','reverse','details'):
+        if mode not in ('discover','check','reverse','details','dates'):
             raise UltraError('Bing does not offer a reliable live/today status. Use the reported first/last dates instead.')
         if region and region not in COUNTRIES: raise UltraError('Choose an EU/EEA country for Bing.')
         start,end=body.get('start') or '',body.get('end') or ''
@@ -151,14 +158,29 @@ class BingClient:
                 result['candidates'].append({'id':str(item['AdvertiserId']),'name':str(item.get('AdvertiserName') or item['AdvertiserId']),'country':str(item.get('AdvertiserCountry') or '')})
             result.update(checkedAt=at,cached=cached,nextPageToken=self._token(fingerprint,skip+len(items)) if has_more else None)
             return result
-        if mode=='details':
-            creative=id_text(body.get('creativeId'))
-            if not creative:raise UltraError('Invalid Microsoft ad ID.')
-            item,at,cached=self._request('Ads/'+creative,{'expand':'AdDetails'},fresh=fresh,ttl=86400)
-            if str(item.get('AdvertiserId'))!=advertiser:raise UltraError('Microsoft ad belongs to a different advertiser.')
-            ad=self._normalize(item)
-            result.update(ads=[ad] if ad else [],domains=[ad['domain']] if ad and ad['domain'] else [],checkedAt=at,cached=cached)
+        if mode in ('details','dates'):
+            records=body.get('records') if mode=='dates' else [{'id':body.get('creativeId'),'advertiserId':advertiser}]
+            if not isinstance(records,list) or not 1<=len(records)<=3:raise UltraError('Select one to three Bing ads to load dates.')
+            for record in records:
+                if not isinstance(record,dict) or not id_text(record.get('id')) or not id_text(record.get('advertiserId')):raise UltraError('Invalid Microsoft ad/advertiser ID.')
+            for record in records:
+                try:
+                    creative=str(record['id']);owner=str(record['advertiserId'])
+                    item,at,cached=self._request('Ads/'+creative,{'expand':'AdDetails'},fresh=fresh,ttl=86400)
+                    if str(item.get('AdvertiserId'))!=owner or str(item.get('AdId'))!=creative:raise UltraError('Microsoft ad details did not match the requested record.')
+                    ad=self._normalize(item,website)
+                    if ad:result['ads'].append(ad)
+                    result['checkedAt']=min(result['checkedAt'],at);result['cached']=result['cached'] and cached
+                except (UltraError,CancelledError) as e:
+                    result.update(incomplete=True,halt=True,warning=str(e)+' '+result['warning']);break
+            result['domains']=sorted({a['domain'] for a in result['ads'] if a['domain']})
             return result
+        # A scan ledger counts source records independently of accepted text ads.
+        # Tokens retain this ledger across retries and application restarts.
+        token_data,_=self.cache.get_cached(body.get('pageToken') or 'no-token',7*86400)
+        scan_id=(token_data or {}).get('scanId') or 'bing-scan:'+secrets.token_urlsafe(18)
+        ledger,_=self.cache.get_cached(scan_id,7*86400)
+        ledger=ledger or {'records':{},'pages':{},'total':None,'countChanged':False}
         params={'top':self.page_size,'skip':skip}
         if mode=='reverse':params['searchText']=website
         else:params['advertiserId']=advertiser
@@ -171,38 +193,64 @@ class BingClient:
             if not isinstance(items,list):raise UltraError('Microsoft ad-list response structure changed.')
         except CancelledError: raise
         except UltraError as e:
-            result.update(nextPageToken=self._token(fingerprint,skip),incomplete=True,warning=str(e)+' '+result['warning'],halt=True)
+            result.update(nextPageToken=self._token(fingerprint,skip,scan_id),incomplete=True,warning=str(e)+' '+result['warning'],halt=True)
+            result['sourceStats']=self._stats(ledger,False)
             return result
-        processed=0
-        for item in items:
-            try:
-                self.cache.check_cancel()
-                if not isinstance(item,dict) or not id_text(item.get('AdId')) or not id_text(item.get('AdvertiserId')):
-                    raise UltraError('Microsoft returned an invalid ad record.')
-                if not text_candidate(item):processed+=1;continue
-                self.progress='Bing · reading ad dates '+str(processed+1)+'/'+str(len(items))+'…'
-                detail,at,cached=self._request('Ads/'+str(item['AdId']),{'expand':'AdDetails'},fresh=fresh,ttl=86400)
-                result['cached']=result['cached'] and cached
-                # Keep the oldest original fetch time when any record is cached.
-                result['checkedAt']=min(result['checkedAt'],at)
-                if str(detail.get('AdId'))!=str(item['AdId']) or str(detail.get('AdvertiserId'))!=str(item['AdvertiserId']):
-                    raise UltraError('Microsoft ad details did not match the requested record.')
-                ad=self._normalize(detail,website if mode=='reverse' else None)
-                if ad:result['ads'].append(ad)
-                processed+=1
-            except (UltraError,CancelledError) as e:
-                result.update(incomplete=True,warning=str(e)+' '+result['warning'],halt=True)
-                break
-        more=processed<len(items) or self._has_more(data,items,skip)
-        if more:result['nextPageToken']=self._token(fingerprint,skip+processed)
-        result['incomplete']=result['incomplete'] or more
+        count=data.get('@odata.count')
+        if isinstance(count,int) and count>=0:
+            ledger['countChanged']=ledger['countChanged'] or (ledger['total'] is not None and ledger['total']!=count)
+            ledger['total']=count
+        for index,item in enumerate(items):
+            identity=str(item.get('AdId')) if isinstance(item,dict) else 'invalid:'+str(skip+index)
+            reason='invalid'
+            if isinstance(item,dict) and id_text(item.get('AdId')) and id_text(item.get('AdvertiserId')):
+                if has_media(item):reason='media'
+                elif not (domain(item.get('DestinationUrl')) or domain(item.get('DisplayUrl'))):reason='noUrl'
+                elif not text_candidate(item):reason='noText'
+                else:
+                    # Read ONLY cached dates here. A new detail request must never
+                    # prevent the remaining advertiser/domain records from loading.
+                    cached_detail,_=self.cache.get_cached('bing:v1:'+BASE+'Ads/'+identity+'?expand=AdDetails',86400)
+                    record=item
+                    if not fresh and cached_detail and str(cached_detail.get('AdId'))==identity and str(cached_detail.get('AdvertiserId'))==str(item['AdvertiserId']):
+                        record={**item,'AdDetails':cached_detail.get('AdDetails')}
+                    try:ad=self._normalize(record,website if mode=='reverse' else None)
+                    except UltraError:ad=self._normalize({**item,'AdDetails':None},website if mode=='reverse' else None)
+                    if ad:result['ads'].append(ad);reason='accepted'
+                    else:reason='differentDomain'
+            ledger['records'][identity]=reason
+        ledger['pages'][str(skip)]=len(items)
+        more=self._has_more(data,items,skip)
+        covered=0
+        for offset,size in sorted((int(k),v) for k,v in ledger['pages'].items()):
+            if offset>covered:break
+            covered=max(covered,offset+size)
+        complete=(not more and covered>=skip+len(items) and not ledger['countChanged']
+                  and (ledger['total'] is None or len(ledger['records'])>=ledger['total']))
+        if more:result['nextPageToken']=self._token(fingerprint,skip+len(items),scan_id)
+        result['incomplete']=not complete
+        result['sourceStats']=self._stats(ledger,complete)
+        result['dateDetailsPending']=sum(a['dateStatus']=='pending' for a in result['ads'])
+        if not more and not complete:
+            result['warning']='The source changed, repeated records, or earlier pages are missing. The source scan is not complete. '+result['warning']
+        self.cache.put_cached(scan_id,ledger)
         return result
+
+    def _stats(self,ledger,complete):
+        reasons=list(ledger['records'].values())
+        return {'sourceTotal':ledger['total'],'sourceRead':len(reasons),
+                'accepted':reasons.count('accepted'),'excludedMedia':reasons.count('media'),
+                'excludedNoText':reasons.count('noText'),'excludedNoUrl':reasons.count('noUrl'),
+                'excludedDifferentDomain':reasons.count('differentDomain'),'invalid':reasons.count('invalid'),
+                'pagesRead':len(ledger['pages']),'sourceComplete':complete,'countChanged':ledger['countChanged']}
 
     def _has_more(self,data,items,skip):
         if not isinstance(items,list):return False
         if not items:return False
         count=data.get('@odata.count')
-        return bool(data.get('@odata.nextLink')) or len(items)>=self.page_size or (isinstance(count,int) and count>skip+len(items))
+        if data.get('@odata.nextLink'):return True
+        if isinstance(count,int):return count>skip+len(items)
+        return len(items)>=self.page_size
 
     def _normalize(self,item,website=None):
         if not text_candidate(item):return None
@@ -222,5 +270,6 @@ class BingClient:
                 'first':date_value(details.get('StartDate')),'last':date_value(details.get('EndDate')),
                 'format':'text candidate','method':'bing-destination-url' if destination_match else 'bing-display-url',
                 'evidence':'\n'.join(str(item.get(k) or '') for k in ('Title','Description','DisplayUrl','DestinationUrl')),
-                'source':BASE+'Ads/'+creative+'?expand=AdDetails',
+                'source':LIBRARY+'ad/'+creative,
+                'dateStatus':'reported' if isinstance(item.get('AdDetails'),dict) else 'pending',
                 'placementVerified':False}

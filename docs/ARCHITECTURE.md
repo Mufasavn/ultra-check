@@ -31,3 +31,17 @@ Normal searches do not run cost preflight or open a budget-confirmation dialog i
 ## 2.10: Bing adapter
 
 `bing_client.py` implements the documented public Microsoft Ad Library API. Search POST bodies select `platform: "bing"`; missing platform remains Google for backward compatibility. Bing routes before all Apify/proxy processing and shares the existing SQLite cache, cancellation event and operation lock with separate cache keys. `/api/bing` supplies the supported EU/EEA countries and scope metadata. Domain lookup validates source URL hosts, with no requests to advertiser destinations. Text shape is a conservative candidate heuristic; placement/type is unverified. Continuation state and rate-limit cooldown persist in the main cache.
+
+
+## 2.10.1 update
+
+
+
+The 2.10 Bing adapter incorrectly discarded title-only records with blank descriptions. It also fetched each ad's dates before returning the remaining list records; a detail rate limit could hide ads already available in the list response.
+
+This update loads advertiser/domain lists first, including valid title-only text candidates. Date details load separately and never remove list records. Click **Load dates (up to 3 ads)** or **Load remaining dates**. Both stop on restrictions, retain successful results and reuse cached dates. Refresh data reloads lists and marks dates for explicit refresh. Dates from only some ads in a group are explicitly marked pending; they must not be treated as complete campaign bounds.
+
+**Load all source pages** is enabled by default for Bing. Disable it to load one source page per click. Each source page contains up to 12 ads, matching the native library page size; the results table still shows 10 groups per page. Requests are spaced by at least **15 seconds**, with cancellation and persistent rate-limit cooldown. No paid fallback, proxy rotation or CAPTCHA bypass is used. Public Microsoft limits can still interrupt a scan.
+
+The source progress panel distinguishes the Microsoft ad count, unique source records read, matching text records, media exclusions and other exclusions. Advertiser counts refer to unique IDs among domain-matched records, not the number of ads. A completed source query does not imply a complete global destination-domain index or verified Search/Text classification.
+

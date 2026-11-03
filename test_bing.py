@@ -33,7 +33,7 @@ class BingTests(unittest.TestCase):
   self.assertEqual(len(r['ads']),1);ad=r['ads'][0]
   self.assertEqual(ad['advertiserId'],'4295402380');self.assertEqual(ad['domain'],'waterdropfilter.com')
   self.assertEqual(ad['first'],'2026-10-11T00:00:00+00:00');self.assertEqual(ad['last'],'2026-10-14T00:00:00+00:00')
-  self.assertIn('/Ads/77515820095524?',ad['source']);self.assertFalse(ad['placementVerified'])
+  self.assertIn('/ad/77515820095524',ad['source']);self.assertFalse(ad['placementVerified'])
   self.assertTrue(r['coverageLimited']);self.assertIn('not all advertisers',r['warning']);self.assertFalse(r['incomplete'])
  def test_domain_lookalikes_are_not_matches(self):
   for host in ['waterdropfilter.com.evil.example','notwaterdropfilter.com','waterdropfilter.company']:
@@ -52,24 +52,24 @@ class BingTests(unittest.TestCase):
   self.assertEqual(result['method'],'bing-display-url')
  def test_media_and_incomplete_text_are_excluded(self):
   self.assertFalse(text_candidate({**REAL_AD,'AssetJson':'https://assets.example/image.json'}))
-  self.assertFalse(text_candidate({**REAL_AD,'Title':''}))
+  self.assertFalse(text_candidate({**REAL_AD,'Title':'','Description':''}))
   self.assertFalse(text_candidate({**REAL_AD,'DisplayUrl':'','DestinationUrl':''}))
  def test_paging_uses_numeric_microsoft_id_and_filters(self):
-  self.respond(ads=[REAL_AD]*10)
+  self.respond(ads=[{**REAL_AD,"AdId":n} for n in range(1,13)])
   body={'mode':'check','advertiserId':'4295402380','region':'72','start':'2026-10-01','end':'2026-10-20'}
   r=self.bing.process(body);self.assertTrue(r['nextPageToken']);self.assertTrue(r['incomplete'])
   self.bing.process({**body,'pageToken':r['nextPageToken']})
   calls=[c for c in self.bing._request.call_args_list if c.args[0]=='Ads']
-  self.assertEqual(calls[-1].args[1],{'top':10,'skip':10,'advertiserId':'4295402380','countryCodes':'72','startDate':'2026-10-01','endDate':'2026-10-20'})
+  self.assertEqual(calls[-1].args[1],{'top':12,'skip':12,'advertiserId':'4295402380','countryCodes':'72','startDate':'2026-10-01','endDate':'2026-10-20'})
  def test_server_capped_page_with_total_continues(self):
   self.respond(ads=[REAL_AD]*3,count=8)
   r=self.bing.process({'mode':'reverse','domain':'waterdropfilter.com'})
   self.assertTrue(r['nextPageToken'])
  def test_token_cannot_cross_platform_queries(self):
-  self.respond(ads=[REAL_AD]*10)
+  self.respond(ads=[{**REAL_AD,"AdId":n} for n in range(1,13)])
   r=self.bing.process({'mode':'reverse','domain':'waterdropfilter.com'})
   with self.assertRaises(UltraError):self.bing.process({'mode':'reverse','domain':'other.example','pageToken':r['nextPageToken']})
- def test_partial_results_resume_at_failed_ad(self):
+ def test_missing_detail_cannot_hide_remaining_list_records(self):
   items=[{**REAL_AD,'AdId':n} for n in (11,12,13)]
   def request(path,params=None,**kw):
    if path=='Ads':return {'value':items},'2026-11-01',False
@@ -77,14 +77,14 @@ class BingTests(unittest.TestCase):
    return {**REAL_AD,'AdId':int(path.split('/')[1])},'2026-11-01',False
   self.bing._request=Mock(side_effect=request)
   r=self.bing.process({'mode':'reverse','domain':'waterdropfilter.com'})
-  self.assertEqual([a['id'] for a in r['ads']],['11']);self.assertTrue(r['halt'])
-  state,_=self.cache.get_cached(r['nextPageToken'],86400);self.assertEqual(state['skip'],1)
+  self.assertEqual([a['id'] for a in r['ads']],['11','12','13']);self.assertFalse(r['incomplete'])
+  self.assertEqual(self.bing._request.call_count,1)
  def test_failure_is_not_an_empty_complete_result(self):
   self.bing._request=Mock(side_effect=UltraError('offline'))
   r=self.bing.process({'mode':'reverse','domain':'waterdropfilter.com'})
   self.assertTrue(r['incomplete']);self.assertTrue(r['nextPageToken']);self.assertTrue(r['halt'])
  def test_mismatched_detail_id_is_not_attached(self):
-  self.respond(ads=[{**REAL_AD,'AdId':9}]);r=self.bing.process({'mode':'reverse','domain':'waterdropfilter.com'})
+  self.respond();r=self.bing.process({'mode':'dates','records':[{'id':'9','advertiserId':'4295402380'}]})
   self.assertEqual(r['ads'],[]);self.assertTrue(r['incomplete'])
  def test_country_date_ids_and_modes_rejected_before_network(self):
   self.bing._request=Mock(side_effect=AssertionError('network'))
@@ -124,7 +124,7 @@ class BingTests(unittest.TestCase):
    out=original(*args);self.cache.cancel.set();return out
   self.bing._normalize=normalize
   r=self.bing.process({'mode':'reverse','domain':'waterdropfilter.com'})
-  self.assertEqual(len(r['ads']),1);self.assertTrue(r['nextPageToken']);self.assertTrue(r['halt'])
+  self.assertEqual(len(r['ads']),2);self.assertFalse(r['incomplete'])
  def test_unknown_dates_remain_unknown(self):
   ad=self.bing._normalize({**REAL_AD,'AdDetails':{'StartDate':'garbage'}})
   self.assertIsNone(ad['first']);self.assertIsNone(ad['last'])

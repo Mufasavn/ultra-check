@@ -12,7 +12,7 @@ from apify_keys import ApifyKeys
 from proxy_client import ProxySettings,ProxyGoogleClient
 from ultra_client import GoogleClient,UltraError,BlockedError,CancelledError,today,now_iso
 
-VERSION='2.10.0-windows-google-bing'
+VERSION='2.10.1-windows-google-bing'
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))
 ASSETS=ROOT/'assets'
 def main():
