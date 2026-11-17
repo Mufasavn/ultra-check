@@ -5,7 +5,7 @@ from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import collect_dynamic_libs
 from PyInstaller.utils.hooks import collect_submodules
 
-datas = [('assets', 'assets')]
+datas = [('assets', 'assets'), ('chrome-extension', 'chrome-extension')]
 # Runtime SSL trust data required by this Python distribution.
 ssl_trust = Path(ssl.__file__).with_name('codex-rejected-cas.pem')
 if ssl_trust.exists(): datas.append((str(ssl_trust), '.'))

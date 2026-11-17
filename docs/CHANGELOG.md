@@ -1,3 +1,14 @@
+# Release 2.9.1
+
+- Apify slots now keep the real reason a key cannot be used: a key rejected by Apify (HTTP 401/403, e.g. user-or-token-not-found) is shown as "Invalid key" with what to do, separate from network errors and empty quota. The "no usable key" error lists how many keys fall in each case.
+
+- Password login: a password is required every time Ultra Check starts. First launch asks you to create one.
+- Password stored only as a salted PBKDF2-SHA256 hash (auth.json in the data folder). Sessions are in memory and end when the app closes.
+- Every API route and action (including Stop/Exit) requires a logged-in session; the page token and Host/Origin checks remain.
+- Wrong passwords: after 5 failures, a wait of 30 s that doubles each further failure (max 15 min).
+- Lock and Change password buttons in the footer. Changing the password ends other sessions.
+- Self-test covers the login flow; live Google lookups in the self-test run only with ULTRA_LIVE_TEST=1.
+
 # Release 2.9
 
 - Stable per-user Windows storage replaces dependence on the current EXE directory.
@@ -10,21 +21,11 @@
 
 This repository is a private source/archive upload of Ultra Check 2.9, not a public publication or deployment.
 
+# Release 2.9.2
 
-## 2.10 — 2026-11-03
-
-Added Google/Bing platform selection, the public Microsoft API adapter, advertiser discovery, verified candidate domain lookup, reported UTC dates, EU/EEA country filters, manual source pagination, platform-labelled CSV and explicit coverage/type limitations. Existing Google providers, storage, ten keys and history retained. 105 tests and packaged UI checks passed.
-
-
-## 2.10.1 update
-
-
-
-The 2.10 Bing adapter incorrectly discarded title-only records with blank descriptions. It also fetched each ad's dates before returning the remaining list records; a detail rate limit could hide ads already available in the list response.
-
-This update loads advertiser/domain lists first, including valid title-only text candidates. Date details load separately and never remove list records. Click **Load dates (up to 3 ads)** or **Load remaining dates**. Both stop on restrictions, retain successful results and reuse cached dates. Refresh data reloads lists and marks dates for explicit refresh. Dates from only some ads in a group are explicitly marked pending; they must not be treated as complete campaign bounds.
-
-**Load all source pages** is enabled by default for Bing. Disable it to load one source page per click. Each source page contains up to 12 ads, matching the native library page size; the results table still shows 10 groups per page. Requests are spaced by at least **15 seconds**, with cancellation and persistent rate-limit cooldown. No paid fallback, proxy rotation or CAPTCHA bypass is used. Public Microsoft limits can still interrupt a scan.
-
-The source progress panel distinguishes the Microsoft ad count, unique source records read, matching text records, media exclusions and other exclusions. Advertiser counts refer to unique IDs among domain-matched records, not the number of ads. A completed source query does not imply a complete global destination-domain index or verified Search/Text classification.
-
+- Ultra Check Bridge browser extension (bundled in the EXE and unpacked to the data folder): Google lookups run in the user's own browser tab; request token capture and cookie-less fallback for signed-in sessions.
+- Midnight dark interface; intro banner and footer credits removed; connection label "GG extension".
+- Progress bar with percentage for every search; failed searches are reported as stopped.
+- dd/mm/yyyy dates with First seen / Last seen labels.
+- Temporary page failures are retried up to two times so all source pages load.
+- Based on 2.9.1 (password login). The Bing adapter from 2.10.x is not part of this line.

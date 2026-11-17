@@ -153,11 +153,22 @@ class GoogleClient:
                 if e.code in (403,429):raise BlockedError('Google access is restricted (HTTP '+str(e.code)+'). Stop scanning and try again later.') from e
                 raise UltraError('Google returned HTTP error '+str(e.code)+'. This is not an empty result.') from e
             except urllib.error.URLError as e:raise UltraError('Could not connect to Google. Check your Internet connection and try again.') from e
+    def browser_rpc(self,bridge,method,form):
+        # Same pacing as direct requests; the call runs in the user's own Chrome tab.
+        self.check_cancel()
+        with self.lock:
+            delay=max(0,1.25-(time.monotonic()-self.last_call))
+            if self.cancel.wait(delay):self.check_cancel()
+            self.last_call=time.monotonic()
+            return bridge.call(method,form,self.cancel)
     def rpc(self,method,payload,ttl=300,fresh=False):
         cachekey='rpc:'+method+':'+json.dumps(payload,sort_keys=True)
         data,at=self.get_cached(cachekey,ttl)
         if data is not None and not fresh:return data,dt.datetime.fromtimestamp(at,dt.timezone.utc).isoformat(),True
-        raw=self.read_url(GOOGLE+'/anji/_/rpc/'+method,urllib.parse.urlencode({'f.req':json.dumps(payload)}).encode()).decode('utf-8')
+        form=urllib.parse.urlencode({'f.req':json.dumps(payload)})
+        bridge=getattr(self,'bridge',None)
+        if bridge is not None and bridge.online():raw=self.browser_rpc(bridge,method,form)
+        else:raw=self.read_url(GOOGLE+'/anji/_/rpc/'+method,form.encode()).decode('utf-8')
         if 'captcha' in raw.lower() or '/sorry/' in raw[:1000]:raise BlockedError('Google requires verification. Ultra Check has stopped; CAPTCHA is not bypassed.')
         try:data=json.loads(raw.removeprefix(")]}'\n"))
         except ValueError as e:raise UltraError('Google returned invalid data. This does not mean there are no ads.') from e

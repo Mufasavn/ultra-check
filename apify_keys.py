@@ -73,8 +73,14 @@ class ApifyKeys:
                 if uid and uid in seen:self.slots[i]={**seen[uid],'key':slot['key']}
                 else:
                     self.slots[i]=self.inspect(slot['key']);seen[self.slots[i]['accountId']]=self.slots[i]
-            except UltraError:
-                self.slots[i]={**slot,'fresh':False,'state':'unavailable','message':'Could not verify the key or connection.'}
+            except ApiError as e:
+                # Keep the real reason: a rejected key is not the same as a network problem.
+                if e.status in (401,403):
+                    self.slots[i]={**slot,'fresh':False,'state':'invalid','checkedAt':now_iso(),'message':'Apify rejected this key (HTTP '+str(e.status)+(': '+e.kind if e.kind else '')+'). The key was deleted, reset or its account is no longer active. Create a new API token in Apify Console > Settings > API & Integrations and save it in this slot.'}
+                else:
+                    self.slots[i]={**slot,'fresh':False,'state':'unavailable','message':'Apify answered with an error: '+str(e)}
+            except UltraError as e:
+                self.slots[i]={**slot,'fresh':False,'state':'unavailable','message':'Could not reach Apify: '+str(e)}
         self.updated=time.monotonic();self.persist();return self.summary()
     def summary(self):
         items=[];accounts={}
@@ -104,7 +110,17 @@ class ApifyKeys:
             try:self.persist()
             except Exception:self.active=old;raise
             self.client.key=s['key'];return i
-        raise UltraError('All API slots are exhausted or unavailable. Refresh their status in Apify API.')
+        raise UltraError(self.no_slot_message(excluded))
+    def no_slot_message(self,excluded=frozenset()):
+        saved=[s for s in self.slots if s.get('key')]
+        invalid=sum(1 for s in saved if s.get('state')=='invalid')
+        exhausted=sum(1 for s in saved if s.get('state')=='exhausted' or (s.get('accountId') in excluded and s.get('state')!='invalid'))
+        unreachable=sum(1 for s in saved if s.get('state')=='unavailable')
+        parts=[]
+        if invalid:parts.append(f'{invalid} rejected by Apify (key deleted, reset or account inactive) - paste new API tokens')
+        if exhausted:parts.append(f'{exhausted} out of quota or balance')
+        if unreachable:parts.append(f'{unreachable} could not be checked (connection or Apify error) - try Refresh usage')
+        return 'No usable Apify key: '+'; '.join(parts or ['no slot is ready'])+'. Open Apify API for details.'
     def start(self,path,body):
         excluded=set()
         for _ in range(10):
