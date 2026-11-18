@@ -12,7 +12,7 @@ from __future__ import annotations
 import secrets,threading,time
 from ultra_client import UltraError,BlockedError,CancelledError
 
-METHODS={'SearchService/SearchCreatives','SearchService/SearchSuggestions','LookupService/GetCreativeById'}
+METHODS={'SearchService/SearchCreatives','SearchService/SearchSuggestions','LookupService/GetCreativeById','FETCH'}
 MAX_TEXT=8_000_000
 
 class BrowserBridge:
@@ -44,7 +44,8 @@ class BrowserBridge:
             if not job or job['done']:return False
             job['result']=payload if isinstance(payload,dict) else {};job['done']=True
             self.cond.notify_all();return True
-    def call(self,method,body,cancel,timeout=45):
+    def call(self,method,body,cancel,timeout=140):
+        # The extension may reload or replace a sleeping Google tab (up to ~120 s worst case).
         """Run one RPC in the browser tab and return the raw response text."""
         if method not in METHODS:raise UltraError('Unsupported source method.')
         job={'id':secrets.token_hex(8),'method':method,'body':body,'done':False,'result':None}

@@ -33,7 +33,7 @@
         if (!pong) { await sleep(5000); continue; }          // extension not installed in this browser
         const d = await post("/api/bridge/poll", { version: pong.version });
         if (!d.job) continue;
-        const answer = await ask({ type: "RPC", method: d.job.method, body: d.job.body }, 40000);
+        const answer = await ask({ type: "RPC", method: d.job.method, body: d.job.body }, 130000);
         await post("/api/bridge/result", { id: d.job.id, result: answer ? answer.result : { status: 0, error: "The extension did not answer." } });
       } catch { await sleep(3000); }                          // not logged in yet, or server restarting
     }

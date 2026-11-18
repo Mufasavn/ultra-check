@@ -14,7 +14,7 @@ from proxy_client import ProxySettings,ProxyGoogleClient
 from browser_bridge import BrowserBridge
 from ultra_client import GoogleClient,UltraError,BlockedError,CancelledError,today,now_iso
 
-VERSION='2.9.2-windows-search-text'
+VERSION='2.9.3-windows-search'
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))
 ASSETS=ROOT/'assets'
 def install_extension(data):

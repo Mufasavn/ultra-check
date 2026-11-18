@@ -1,6 +1,6 @@
-# Ultra Check Windows 2.9.2
+# Ultra Check Windows 2.9.3
 
-Find the advertisers behind a domain, or the domains behind an advertiser, from the public Google Ads Transparency Center (Google Search / Text ads).
+Find the advertisers behind a domain, or the domains behind an advertiser, from the public Google Ads Transparency Center (Google Search ads: text, image and video).
 
 ## Download and run
 
@@ -20,6 +20,16 @@ Google limits lookups sent directly from an app. With the bundled **Ultra Check 
 4. After updating Ultra Check, click the reload icon on the extension card.
 
 The browser requires this one manual step for any extension that is not installed from its store. If Google asks for verification, the Google tab comes to the front; complete it yourself and search again. Nothing is bypassed automatically.
+
+## What's new in 2.9.3
+
+- **Choose the ad format**: All formats (default), Text, Image or Video. "All formats" matches Google's own view of Google Search ads; earlier versions showed Text only and missed image (Shopping) and video ads.
+- **Format breakdown in results**: filter chips with counts, a format badge on every row, and a Formats column in the CSV export.
+- **Domains confirmed by Google (Advertiser -> Domain)**: candidate domains are read from each ad preview (display URL, video `visible_url`, Shopping merchant, OCR), then confirmed with Google's advertiser + domain filter. One confirmation covers every ad of that advertiser on that domain. Each row says how its domain was obtained.
+- **Measured completeness**: on 169 ads from 20 domains not used during development, 169/169 received a domain, all confirmed by Google (previous version: about 57% across all formats).
+- **Select all advertiser profiles**: no 10-profile limit; use Select all / Clear selection.
+- **Pixel logo** (LED dot-matrix) in the sidebar and on the login screen.
+- **GG extension 1.3.0**: ad previews are downloaded through the browser; sleeping Google tabs are reloaded automatically. Reload the extension after updating.
 
 ## What's new in 2.9.2
 

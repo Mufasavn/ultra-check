@@ -29,3 +29,12 @@ This repository is a private source/archive upload of Ultra Check 2.9, not a pub
 - dd/mm/yyyy dates with First seen / Last seen labels.
 - Temporary page failures are retried up to two times so all source pages load.
 - Based on 2.9.1 (password login). The Bing adapter from 2.10.x is not part of this line.
+
+# Release 2.9.3
+
+- Ad format selection (all / text / image / video) for both lookup directions; format filters, badges and CSV column.
+- Advertiser -> Domain: candidate domains from ad previews verified with Google's advertiser + domain filter; second pass and end-of-scan matching; bounded paging of large lists; advertiser's only verified domain (labelled) for ads that show none; refuted display domains are not used.
+- Preview downloads through the extension (1.3.0); extension reloads or replaces sleeping Google tabs (1.2.0).
+- No limit on the number of selected advertiser profiles; Select all.
+- LED dot-matrix pixel logo.
+- Tests: 137.

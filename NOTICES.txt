@@ -1,4 +1,4 @@
-Ultra Check Windows 2.9.2
+Ultra Check Windows 2.9.3
 
 This executable bundles Python 3.12 and uses these open-source components:
 React, React DOM (MIT); lucide-react (ISC); PyWinRT 3.2.1 (MIT);
