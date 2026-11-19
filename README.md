@@ -29,6 +29,7 @@ The browser requires this one manual step for any extension that is not installe
 - **Measured completeness**: on 169 ads from 20 domains not used during development, 169/169 received a domain, all confirmed by Google (previous version: about 57% across all formats).
 - **Select all advertiser profiles**: no 10-profile limit; use Select all / Clear selection.
 - **Pixel logo** (LED dot-matrix) in the sidebar and on the login screen.
+- **Extension stays installed** (1.3.1): Ultra Check keeps it in a fixed folder (`%LOCALAPPDATA%\UltraCheck\chrome-extension`, never deleted) and the extension has a fixed ID. Load it once from that folder, not from Downloads, a ZIP or a temporary folder; a banner shows the path while it is not connected.
 - **GG extension 1.3.0**: ad previews are downloaded through the browser; sleeping Google tabs are reloaded automatically. Reload the extension after updating.
 
 ## What's new in 2.9.2

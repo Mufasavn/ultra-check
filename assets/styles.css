@@ -57,6 +57,7 @@ th{font-size:10px}.date-cell{font-size:11.5px;color:#c9d1db}.date-cell em{font-s
 .api-slot.is-active{border-color:#c6f04d;box-shadow:0 0 0 1px #c6f04d}
 .footer{justify-content:flex-end}
 .format-presets{margin-bottom:6px}
+.ext-banner{background:#2a2414;border:1px solid #4d4020;color:#e5c07b;border-radius:9px;padding:13px 16px;margin:0 0 16px;font-size:12px;line-height:1.8}.ext-banner b{color:#ffd88a}.ext-banner code{font-family:Consolas,monospace;font-size:11.5px;background:#0f1319;border:1px solid #252c37;border-radius:5px;padding:1px 6px;color:#e9edf2;overflow-wrap:anywhere}.ext-banner .text-button{padding:0 0 0 6px;color:#c6f04d}
 .profile-footer .select-all{margin-left:auto;margin-right:10px}
 .pixel-brand{padding:0 4px;display:block;line-height:0}.pixel-logo{display:block;shape-rendering:geometricPrecision}
 .logo-tile{fill:#1b222c}.logo-on{fill:#c6f04d}.logo-off{fill:#1b222c}.logo-sub{fill:#7d8896}

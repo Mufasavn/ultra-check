@@ -17,14 +17,25 @@ from ultra_client import GoogleClient,UltraError,BlockedError,CancelledError,tod
 VERSION='2.9.3-windows-search'
 ROOT=Path(getattr(sys,'_MEIPASS',Path(__file__).parent))
 ASSETS=ROOT/'assets'
+EXTENSION_NOTE='''This folder is the Ultra Check Bridge browser extension ("GG extension").
+Chrome/Edge load the extension from HERE: do not delete, move or rename this folder,
+or the browser removes the extension at its next start.
+Ultra Check keeps this folder up to date; after an update, click the reload icon
+on the extension card in chrome://extensions or edge://extensions.
+'''
 def install_extension(data):
-    """Copy the bundled browser extension next to the user's data so the browser can load it."""
+    """Keep the bundled browser extension in a fixed per-user folder the browser can load
+    once and keep: never deleted, files rewritten only when their content changed."""
     src=ROOT/'chrome-extension';dst=Path(data)/'chrome-extension'
     try:
         if not src.is_dir():return ''
         dst.mkdir(parents=True,exist_ok=True)
         for item in src.iterdir():
-            if item.is_file():(dst/item.name).write_bytes(item.read_bytes())
+            if item.is_file():
+                target=dst/item.name;raw=item.read_bytes()
+                if not target.exists() or target.read_bytes()!=raw:target.write_bytes(raw)
+        note=dst/'READ-ME-DO-NOT-DELETE.txt'
+        if not note.exists():note.write_text(EXTENSION_NOTE,encoding='utf-8')
         return str(dst)
     except OSError:return ''
 def main():

@@ -26,3 +26,6 @@ session.json
 exports/
 tmp/
 test-results/
+
+# Private key that fixes the browser extension ID: never upload
+*.pem

@@ -37,4 +37,5 @@ This repository is a private source/archive upload of Ultra Check 2.9, not a pub
 - Preview downloads through the extension (1.3.0); extension reloads or replaces sleeping Google tabs (1.2.0).
 - No limit on the number of selected advertiser profiles; Select all.
 - LED dot-matrix pixel logo.
-- Tests: 137.
+- Extension 1.3.1: fixed extension ID (manifest key; private key kept out of the repository), fixed install folder rewritten only when files change, not-connected banner with the folder path.
+- Tests: 141.

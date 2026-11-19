@@ -1,13 +1,39 @@
 {
   "manifest_version": 3,
   "name": "Ultra Check Bridge",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Lets the local Ultra Check app read public Google Ads Transparency data through your own browser tab.",
-  "permissions": ["scripting"],
-  "host_permissions": ["https://adstransparency.google.com/*", "https://displayads-formats.googleusercontent.com/*", "https://tpc.googlesyndication.com/*"],
-  "background": { "service_worker": "background.js" },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkOUeDeqZXTZJGEQE9PnbnKwh4GQ1MlCaeP/OzWGXdCW6VzlT4wcduPSTieJRBfUssD84isK0nbmoT2s//CZS2t5dyhFRcuEXf8IRRFKsWQNQs9X4hYWIzYwVWXaZZFijr+S6tiSuNBmOwZlZZy7OOEYBy9UZeo6RAYojJEE5V9xSa1mBrCnhKECStYMayuVYlW8J9KYxqLgJpL/9KQg7IEZtdVus4VfohtMHbknS5PLRkrTJyD7/SmcYvud85fT1EsC3LxqxBvE2jJpk3hzmWFDtCHL9OqNKTEfH2qBh2Gpc7pONOOh8OhbiLp1MQKoaJXB89v/KORTfmaecLKMDVQIDAQAB",
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://adstransparency.google.com/*",
+    "https://displayads-formats.googleusercontent.com/*",
+    "https://tpc.googlesyndication.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
-    { "matches": ["http://127.0.0.1/*"], "js": ["relay.js"], "run_at": "document_start" },
-    { "matches": ["https://adstransparency.google.com/*"], "js": ["xsrf-hook.js"], "run_at": "document_start", "world": "MAIN" }
+    {
+      "matches": [
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "relay.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://adstransparency.google.com/*"
+      ],
+      "js": [
+        "xsrf-hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
   ]
 }
